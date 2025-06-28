@@ -5,9 +5,18 @@ xdg_data_dir := `echo "${XDG_DATA_HOME:-$HOME/.local/share}/pinnacle"`
 
 lua_version := "5.4"
 
-local_lua_path := x"$HOME/.luarocks/share/lua/" + lua_version + x"/?.lua;$HOME/.luarocks/share/lua/" + lua_version + "/?.init.lua;"
-export LUA_PATH := local_lua_path + env("LUA_PATH", "")
-export LUA_CPATH := x"$HOME/.luarocks/lib/lua/" + lua_version + x"/?.so;" + env("LUA_CPATH", "")
+# dirty trick until just's which() is stabilized.
+luarocks := `which luarocks >/dev/null && which luarocks || echo ""`
+
+local_lua_path := x"$HOME/.luarocks/share/lua/" + lua_version + x"/?.lua;$HOME/.luarocks/share/lua/" + lua_version + "/?.init.lua;" + env("LUA_PATH", "")
+export LUA_PATH := if luarocks != "" {
+    shell(luarocks + ' "$@"', 'path', '--full', '--lr-path', '--lua-version', lua_version)
+} else { local_lua_path + env("LUA_PATH", "") }
+
+local_lua_cpath := x"$HOME/.luarocks/lib/lua/" + lua_version + x"/?.so;"
+export LUA_CPATH := if luarocks != "" {
+    shell(luarocks + ' "$@"', 'path', '--full', '--lr-cpath', '--lua-version', lua_version)
+} else { local_lua_cpath + env("LUA_CPATH", "") }
 
 list:
     @just --list --unsorted
