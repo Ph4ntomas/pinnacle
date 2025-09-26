@@ -11,6 +11,7 @@ pub mod input_region;
 pub mod row;
 pub mod scrollable;
 pub mod text;
+pub mod mouse_area;
 
 use std::{
     collections::HashMap,
@@ -25,6 +26,7 @@ use row::Row;
 use scrollable::Scrollable;
 use snowcap_api_defs::snowcap::widget;
 use text::Text;
+use mouse_area::MouseArea;
 
 use crate::widget::input_region::InputRegion;
 
@@ -48,6 +50,30 @@ impl WidgetId {
 impl From<u32> for WidgetId {
     fn from(value: u32) -> Self {
         Self(value)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) enum WidgetKey {
+    WidgetId(WidgetId),
+    UniqueId(String)
+}
+
+impl Default for WidgetKey {
+    fn default() -> Self {
+        Self::WidgetId(Default::default())
+    }
+}
+
+impl From<WidgetId> for WidgetKey {
+    fn from(value: WidgetId) -> Self {
+        Self::WidgetId(value)
+    }
+}
+
+impl From<String> for WidgetKey {
+    fn from(value: String) -> Self {
+        Self::UniqueId(value)
     }
 }
 
@@ -135,6 +161,9 @@ impl<Msg> WidgetDef<Msg> {
             Widget::InputRegion(input_region) => {
                 input_region.child.collect_messages(callbacks, with_widget);
             }
+            Widget::MouseArea(mouse_area) => {
+                mouse_area.child.collect_messages(callbacks, with_widget);
+            }
         }
     }
 }
@@ -160,6 +189,7 @@ pub enum Widget<Msg> {
     Button(Box<Button<Msg>>),
     Image(Image),
     InputRegion(Box<InputRegion<Msg>>),
+    MouseArea(Box<MouseArea<Msg>>),
 }
 
 impl<Msg, T: Into<Widget<Msg>>> From<T> for WidgetDef<Msg> {
@@ -190,6 +220,9 @@ impl<Msg> From<Widget<Msg>> for widget::v1::widget_def::Widget {
             Widget::Image(image) => widget::v1::widget_def::Widget::Image(image.into()),
             Widget::InputRegion(input_region) => {
                 widget::v1::widget_def::Widget::InputRegion(Box::new((*input_region).into()))
+            }
+            Widget::MouseArea(mouse_area) => {
+                widget::v1::widget_def::Widget::MouseArea(Box::new((*mouse_area).into()))
             }
         }
     }
