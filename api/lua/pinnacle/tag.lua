@@ -196,6 +196,8 @@ end
 
 local signal_name_to_SignalName = {
     active = "TagActive",
+    created = "TagCreated",
+    removed = "TagRemoved",
 }
 
 ---@class pinnacle.tag.TagSignal Signals related to tag events.
