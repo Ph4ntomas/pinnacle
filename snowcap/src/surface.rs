@@ -48,6 +48,7 @@ pub struct SnowcapSurface {
     redraw_scheduled: bool,
     pending_view: Option<ViewFn>,
     waiting_view: bool,
+    need_draw: bool,
     pub widgets: SnowcapWidgetProgram,
     clipboard: WaylandClipboard,
 
@@ -136,6 +137,7 @@ impl SnowcapSurface {
             pending_bounds: None,
             pending_view: None,
             waiting_view: false,
+            need_draw: false,
             widgets,
             renderer,
             clipboard,
@@ -188,7 +190,10 @@ impl SnowcapSurface {
             None => iced::mouse::Cursor::Unavailable,
         };
 
-        self.widgets.draw(&mut self.renderer, cursor);
+        if self.need_draw {
+            self.widgets.draw(&mut self.renderer, cursor);
+            self.need_draw = false;
+        }
 
         match (&mut self.renderer, self.surface.as_mut().unwrap()) {
             (Renderer::Primary(renderer), Surface::Primary(surface)) => {
@@ -254,6 +259,7 @@ impl SnowcapSurface {
             self.widgets
                 .rebuild_ui(self.bounds, &mut self.renderer, self.pending_view.take())
                 .update(&self.queue_handle, &self.compositor_state, &self.wl_surface);
+            self.need_draw = true;
 
             if self.widgets.size() != old_size {
                 resized = true;
@@ -358,6 +364,8 @@ impl SnowcapSurface {
             self.widgets
                 .rebuild_ui(self.bounds, &mut self.renderer, None)
                 .update(&self.queue_handle, &self.compositor_state, &self.wl_surface);
+
+            self.need_draw = true;
         }
 
         if request_frame {
