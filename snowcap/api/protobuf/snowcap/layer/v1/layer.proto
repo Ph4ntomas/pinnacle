@@ -66,9 +66,15 @@ message UpdateLayerRequest {
 }
 message UpdateLayerResponse {}
 
+message ViewRequest {
+  uint32 layer_id = 1;
+}
+message ViewResponse {}
+
 service LayerService {
   rpc NewLayer(NewLayerRequest) returns (NewLayerResponse);
   rpc Close(CloseRequest) returns (google.protobuf.Empty);
   rpc UpdateLayer(UpdateLayerRequest) returns (UpdateLayerResponse);
   rpc OperateLayer(OperateLayerRequest) returns (OperateLayerResponse);
+  rpc RequestView(ViewRequest) returns (ViewResponse);
 }

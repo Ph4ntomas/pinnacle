@@ -6,7 +6,7 @@ use snowcap_api_defs::snowcap::layer::{
     self,
     v1::{
         CloseRequest, NewLayerRequest, NewLayerResponse, OperateLayerRequest, OperateLayerResponse,
-        UpdateLayerRequest, UpdateLayerResponse, layer_service_server,
+        UpdateLayerRequest, UpdateLayerResponse, ViewRequest, ViewResponse, layer_service_server,
     },
 };
 use tonic::{Request, Response, Status};
@@ -212,6 +212,28 @@ impl layer_service_server::LayerService for super::LayerService {
             layer.operate(operation);
 
             Ok(OperateLayerResponse {})
+        })
+        .await
+    }
+
+    async fn request_view(
+        &self,
+        request: Request<ViewRequest>,
+    ) -> Result<Response<ViewResponse>, Status> {
+        let request = request.into_inner();
+
+        let id = request.layer_id;
+        let id = LayerId(id);
+
+        run_unary(&self.sender, move |state| {
+            let Some(layer) = state.layers.iter_mut().find(|layer| layer.layer_id == id) else {
+                return Ok(ViewResponse {});
+            };
+
+            layer.request_view();
+            layer.schedule_redraw();
+
+            Ok(ViewResponse {})
         })
         .await
     }

@@ -124,6 +124,10 @@ impl SnowcapLayer {
         }
     }
 
+    pub fn request_view(&mut self) {
+        self.surface.request_view();
+    }
+
     pub fn schedule_redraw(&mut self) {
         self.surface.schedule_redraw();
     }
