@@ -364,6 +364,7 @@ pub fn widget_def_to_fn(def: WidgetDef) -> Option<ViewFn> {
                 clip,
                 child,
                 style,
+                id,
             } = *container_def;
 
             let child_widget_fn = child.and_then(|def| widget_def_to_fn(*def));
@@ -439,6 +440,10 @@ pub fn widget_def_to_fn(def: WidgetDef) -> Option<ViewFn> {
                 };
 
                 container = container.style(style);
+
+                if let Some(id) = id.clone() {
+                    container = container.id(id);
+                }
 
                 container.into()
             });
