@@ -19,6 +19,7 @@ use crate::{
     BlockOnTokio,
     client::Client,
     input::{KeyEvent, Modifiers},
+    popup::{self, AsParent},
     widget::{self, Program, WidgetDef, WidgetId, WidgetMessage},
 };
 
@@ -435,5 +436,11 @@ where
                 on_press(handle.clone(), key, mods);
             }
         });
+    }
+}
+
+impl<Msg> AsParent for LayerHandle<Msg> {
+    fn as_parent(&self) -> crate::popup::Parent {
+        popup::Parent(popup::ParentInner::Layer(self.id))
     }
 }
