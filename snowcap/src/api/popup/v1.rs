@@ -49,13 +49,23 @@ impl popup_service_server::PopupService for super::PopupService {
             return Err(Status::invalid_argument("no widget def"));
         };
 
+        let replace = !request.no_replace;
+
         run_unary(&self.sender, move |state| {
             let Some(f) = crate::api::widget::v1::widget_def_to_fn(widget_def) else {
                 return Err(Status::invalid_argument("widget def was null"));
             };
 
-            let existing = state.popups.iter().any(|p| p.parent_id == parent_id);
-            if existing {
+            let existing = state
+                .popups
+                .iter()
+                .find(|p| p.parent_id == parent_id)
+                .map(|p| p.popup_id);
+            if let Some(existing) = existing
+                && replace
+            {
+                state.popup_destroy(existing);
+            } else if existing.is_some() {
                 return Err(Status::failed_precondition(
                     "Another popup with the same parent already exists",
                 ));
