@@ -32,7 +32,13 @@ use xkbcommon::xkb::Keysym;
 
 use crate::{
     decoration::{DecorationIdCounter, SnowcapDecoration},
-    handlers::{foreign_toplevel_list::ForeignToplevelListHandleData, keyboard::KeyboardFocus},
+    handlers::{
+        foreign_toplevel_list::ForeignToplevelListHandleData,
+        foreign_toplevel_management::{
+            ZwlrForeignToplevelEvent, ZwlrForeignToplevelManagementState,
+        },
+        keyboard::KeyboardFocus,
+    },
     layer::{LayerIdCounter, SnowcapLayer},
     popup::{PopupIdCounter, SnowcapPopup},
     runtime::{CalloopSenderSink, CurrentTokioExecutor},
@@ -85,6 +91,9 @@ pub struct State {
 
     pub foreign_toplevel_list_handles:
         Vec<(ExtForeignToplevelHandleV1, ForeignToplevelListHandleData)>,
+
+    pub zwlr_foreign_toplevel_mgmt_state: ZwlrForeignToplevelManagementState,
+    pub zwlr_foreign_toplevel_sender: calloop::channel::Sender<ZwlrForeignToplevelEvent>,
 }
 
 impl State {
@@ -111,6 +120,8 @@ impl State {
             globals.bind(&queue_handle, 1..=1, ()).unwrap();
         let foreign_toplevel_list: ExtForeignToplevelListV1 =
             globals.bind(&queue_handle, 1..=1, ()).unwrap();
+        let zwlr_foreign_toplevel_mgmt_state =
+            ZwlrForeignToplevelManagementState::new(&globals, &queue_handle);
 
         // TODO: Decide whether we keep the full xdg_shell or just XdgWmBase
         let xdg_shell = XdgShell::bind(&globals, &queue_handle).unwrap();
@@ -193,6 +204,23 @@ impl State {
                             }
                         }
                         SnowcapMessage::WidgetEvent(..) => (),
+                    }
+                }
+                calloop::channel::Event::Closed => (),
+            })
+            .unwrap();
+
+        let (zwlr_foreign_toplevel_sender, recv) =
+            calloop::channel::channel::<ZwlrForeignToplevelEvent>();
+        loop_handle
+            .insert_source(recv, |event, _, _state| match event {
+                calloop::channel::Event::Msg(evt) => {
+                    use ZwlrForeignToplevelEvent as Event;
+
+                    match evt {
+                        Event::Added(_handle) => (),   // TODO:
+                        Event::Closed(_handle) => (),  // TODO:
+                        Event::Changed(_handle) => (), // TODO:
                     }
                 }
                 calloop::channel::Event::Closed => (),
@@ -286,6 +314,9 @@ impl State {
             decoration_id_counter: DecorationIdCounter::default(),
             popup_id_counter: PopupIdCounter::default(),
             foreign_toplevel_list_handles: Vec::new(),
+
+            zwlr_foreign_toplevel_mgmt_state,
+            zwlr_foreign_toplevel_sender,
         };
 
         Ok(state)
