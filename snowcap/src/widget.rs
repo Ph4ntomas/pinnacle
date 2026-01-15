@@ -1,5 +1,6 @@
 pub mod input_region;
 pub mod output;
+pub mod tasklist;
 
 use iced::{Color, Theme, event::Status};
 use iced_graphics::Viewport;
