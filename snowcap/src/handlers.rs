@@ -278,6 +278,8 @@ impl CompositorHandler for State {
         surface: &WlSurface,
         output: &wl_output::WlOutput,
     ) {
+        use crate::widget::output;
+
         let Some(output_info) = self.output_state.info(output) else {
             return;
         };
@@ -294,6 +296,9 @@ impl CompositorHandler for State {
             .find(|layer| layer.layer.wl_surface() == surface)
         {
             layer.wl_output = Some(output.clone());
+
+            let mut oper = output::operation::enter_output(output.clone());
+            layer.operate(&mut oper);
 
             if let InitialConfigureState::PreConfigure(pending) = &mut layer.initial_configure {
                 *pending = Some(size);
@@ -315,6 +320,9 @@ impl CompositorHandler for State {
         {
             popup.wl_output = Some(output.clone());
 
+            let mut oper = output::operation::enter_output(output.clone());
+            popup.operate(&mut oper);
+
             popup.output_size_changed(size);
 
             if popup.initial_configure_received {
@@ -327,9 +335,26 @@ impl CompositorHandler for State {
         &mut self,
         _conn: &Connection,
         _qh: &QueueHandle<Self>,
-        _surface: &WlSurface,
-        _output: &wl_output::WlOutput,
+        surface: &WlSurface,
+        output: &wl_output::WlOutput,
     ) {
+        use crate::widget::output;
+
+        if let Some(layer) = self
+            .layers
+            .iter_mut()
+            .find(|layer| layer.layer.wl_surface() == surface)
+        {
+            let mut oper = output::operation::leave_output(output.clone());
+            layer.operate(&mut oper);
+        } else if let Some(popup) = self
+            .popups
+            .iter_mut()
+            .find(|p| p.popup.wl_surface() == surface)
+        {
+            let mut oper = output::operation::leave_output(output.clone());
+            popup.operate(&mut oper);
+        }
     }
 }
 delegate_compositor!(State);
