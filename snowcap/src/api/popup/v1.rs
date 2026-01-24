@@ -52,7 +52,7 @@ impl popup_service_server::PopupService for super::PopupService {
         let replace = !request.no_replace;
 
         run_unary(&self.sender, move |state| {
-            let Some(f) = crate::api::widget::v1::widget_def_to_fn(widget_def) else {
+            let Some(f) = crate::api::widget::v1::widget_def_to_fn(widget_def, state) else {
                 return Err(Status::invalid_argument("widget def was null"));
             };
 
@@ -241,6 +241,8 @@ impl popup_service_server::PopupService for super::PopupService {
                 new_anchor_rect = Some(anchor_rect);
             }
 
+            let widget_def = widget_def.and_then(|def| widget_def_to_fn(def, state));
+
             let Some(popup) = state.popup_for_id(id) else {
                 return Ok(UpdatePopupResponse {});
             };
@@ -251,7 +253,7 @@ impl popup_service_server::PopupService for super::PopupService {
                 gravity,
                 offset,
                 constraints_adjust,
-                widget_def.and_then(widget_def_to_fn),
+                widget_def,
             );
 
             Ok(UpdatePopupResponse {})
