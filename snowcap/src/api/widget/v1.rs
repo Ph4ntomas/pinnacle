@@ -1,7 +1,9 @@
 use anyhow::Context;
 use iced::widget::{
-    Column, Container, Row, Scrollable, button, image::FilterMethod, scrollable::Scrollbar,
+    Column, Container, Row, Scrollable, image::FilterMethod, scrollable::Scrollbar,
 };
+use iced_touch::widget::{button, mouse_area};
+
 use snowcap_api_defs::snowcap::widget::{
     self,
     v1::{
@@ -534,7 +536,7 @@ pub fn widget_def_to_fn(def: WidgetDef) -> Option<ViewFn> {
             let child_widget_fn = child.and_then(|def| widget_def_to_fn(*def));
 
             let f: ViewFn = Box::new(move || {
-                let mut button = iced::widget::Button::new(
+                let mut button = button::Button::new(
                     child_widget_fn
                         .as_ref()
                         .map(|child| child())
@@ -738,7 +740,7 @@ pub fn widget_def_to_fn(def: WidgetDef) -> Option<ViewFn> {
             let child_widget_fn = child.and_then(|def| widget_def_to_fn(*def));
 
             let f: ViewFn = Box::new(move || {
-                let mut mouse_area = iced::widget::MouseArea::new(
+                let mut mouse_area = mouse_area::MouseArea::new(
                     child_widget_fn
                         .as_ref()
                         .map(|child| child())
