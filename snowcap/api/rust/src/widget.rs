@@ -680,7 +680,7 @@ pub trait Program {
     fn update(&mut self, msg: Self::Message);
 
     /// Creates a widget definition for display by Snowcap.
-    fn view(&self) -> WidgetDef<Self::Message>;
+    fn view(&self) -> Option<WidgetDef<Self::Message>>;
 
     /// Called when a surface has been created with this program.
     ///
@@ -738,7 +738,7 @@ impl<Msg> Program for Box<dyn Program<Message = Msg>> {
         (**self).update(msg);
     }
 
-    fn view(&self) -> WidgetDef<Self::Message> {
+    fn view(&self) -> Option<WidgetDef<Self::Message>> {
         (**self).view()
     }
 
@@ -765,7 +765,7 @@ impl<Msg> Program for Box<dyn Program<Message = Msg> + Send> {
         (**self).update(msg);
     }
 
-    fn view(&self) -> WidgetDef<Self::Message> {
+    fn view(&self) -> Option<WidgetDef<Self::Message>> {
         (**self).view()
     }
 
@@ -792,7 +792,7 @@ impl<Msg> Program for Box<dyn Program<Message = Msg> + Send + Sync> {
         (**self).update(msg);
     }
 
-    fn view(&self) -> WidgetDef<Self::Message> {
+    fn view(&self) -> Option<WidgetDef<Self::Message>> {
         (**self).view()
     }
 
