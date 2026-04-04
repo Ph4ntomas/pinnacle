@@ -1,4 +1,5 @@
 pub mod input_region;
+pub mod prompt;
 pub mod touch_area;
 
 use iced::{Color, Theme, event::Status};
